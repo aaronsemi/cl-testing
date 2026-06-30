@@ -365,6 +365,46 @@
     el.className = "submit-status" + (kind ? " " + kind : "");
   }
 
+  // Where submissions are posted. The page is static, so "submit" opens a
+  // pre-filled GitHub Issue in this repo — a real, persistent destination.
+  const SUBMIT_REPO = "aaronsemi/cl-testing";
+
+  function buildIssueBody(name, ov) {
+    const lines = [];
+    lines.push("## Player Build — " + name);
+    lines.push("");
+    const noteParts = ["Top " + ov.topN + " avg " + ov.base];
+    if (ov.flair > 0) noteParts.push("+" + ov.flair + " flair");
+    if (ov.penalty > 0) noteParts.push("-" + ov.penalty + " injuries");
+    lines.push("**Overall:** " + ov.finalOverall + "  (" + noteParts.join(" · ") + ")");
+    lines.push("**Points:** " + spent() + " / " + POINT_CAP);
+    lines.push("");
+    CATEGORIES.forEach(function (cat) {
+      lines.push("### " + cat.name);
+      cat.attrs.forEach(function (attr) {
+        lines.push("- " + attr + ": " + state[idOf(cat.key, attr)]);
+      });
+      lines.push("");
+    });
+    const chosen = INJURIES.filter(function (i) { return injuryState[i.id]; });
+    lines.push("### Injuries");
+    if (chosen.length) {
+      chosen.forEach(function (i) { lines.push("- " + i.name + " (-" + i.penalty + ")"); });
+    } else {
+      lines.push("- None (fully healthy)");
+    }
+    lines.push("");
+    lines.push("_Submitted via the Build a Player tool._");
+    return lines.join("\n");
+  }
+
+  function buildIssueUrl(name, ov) {
+    const title = "Build: " + name + " (" + ov.finalOverall + " OVR)";
+    return "https://github.com/" + SUBMIT_REPO + "/issues/new" +
+      "?title=" + encodeURIComponent(title) +
+      "&body=" + encodeURIComponent(buildIssueBody(name, ov));
+  }
+
   function submitProfile() {
     const nameInput = document.getElementById("playerName");
     const name = (nameInput && nameInput.value || "").trim();
@@ -393,12 +433,24 @@
 
     const profiles = loadProfiles();
     profiles.unshift(profile);
-    if (!saveProfiles(profiles)) {
-      setStatus("Could not save — browser storage is unavailable.", "warn");
-      return;
-    }
-    setStatus("Saved “" + name + "” — Overall " + ov.finalOverall + ".", "ok");
+    saveProfiles(profiles); // local draft copy (non-fatal if storage is off)
     renderSaved();
+
+    // Actually submit: open a pre-filled GitHub Issue to post the build.
+    const url = buildIssueUrl(name, ov);
+    const win = window.open(url, "_blank", "noopener");
+
+    setStatus("“" + name + "” (Overall " + ov.finalOverall + ") — ", "ok");
+    const el = document.getElementById("submitStatus");
+    if (el) {
+      const a = document.createElement("a");
+      a.href = url;
+      a.target = "_blank";
+      a.rel = "noopener";
+      a.className = "submit-link";
+      a.textContent = win ? "finish posting on GitHub →" : "open GitHub to post →";
+      el.appendChild(a);
+    }
   }
 
   function applyProfile(p) {

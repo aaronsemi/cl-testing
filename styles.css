@@ -285,10 +285,13 @@ input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rg
 }
 .btn-submit:hover { background: var(--blue-dim); }
 .btn-sm { flex: 0 0 auto; padding: 7px 12px; font-size: .68rem; }
+.submit-hint { margin: -4px 0 10px; font-size: .68rem; color: var(--muted); letter-spacing: .03em; }
 
 .submit-status { min-height: 1.1em; margin: 0 0 14px; font-size: .74rem; letter-spacing: .03em; color: var(--muted); }
 .submit-status.ok { color: #57d98a; }
 .submit-status.warn { color: #ff9b5b; }
+.submit-link { color: var(--blue); text-decoration: underline; font-weight: 700; }
+.submit-link:hover { color: #fff; }
 
 .saved-empty { color: var(--muted); font-size: .85rem; }
 .saved-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }

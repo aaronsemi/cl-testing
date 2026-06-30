@@ -295,10 +295,13 @@ input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rg
 }
 .btn-submit:hover { background: var(--blue-dim); }
 .btn-sm { flex: 0 0 auto; padding: 7px 12px; font-size: .68rem; }
+.submit-hint { margin: -4px 0 10px; font-size: .68rem; color: var(--muted); letter-spacing: .03em; }
 
 .submit-status { min-height: 1.1em; margin: 0 0 14px; font-size: .74rem; letter-spacing: .03em; color: var(--muted); }
 .submit-status.ok { color: #57d98a; }
 .submit-status.warn { color: #ff9b5b; }
+.submit-link { color: var(--blue); text-decoration: underline; font-weight: 700; }
+.submit-link:hover { color: #fff; }
 
 .saved-empty { color: var(--muted); font-size: .85rem; }
 .saved-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
@@ -412,6 +415,7 @@ input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rg
             </div>
 
             <button type="button" class="btn btn-submit" id="submitBtn">Submit Profile</button>
+            <p class="submit-hint">Posts your build as a GitHub issue (and saves a local copy).</p>
             <p class="submit-status" id="submitStatus" role="status" aria-live="polite"></p>
 
             <div class="summary-actions">
@@ -826,6 +830,46 @@ input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rg
     el.className = "submit-status" + (kind ? " " + kind : "");
   }
 
+  // Where submissions are posted. The page is static, so "submit" opens a
+  // pre-filled GitHub Issue in this repo — a real, persistent destination.
+  const SUBMIT_REPO = "aaronsemi/cl-testing";
+
+  function buildIssueBody(name, ov) {
+    const lines = [];
+    lines.push("## Player Build — " + name);
+    lines.push("");
+    const noteParts = ["Top " + ov.topN + " avg " + ov.base];
+    if (ov.flair > 0) noteParts.push("+" + ov.flair + " flair");
+    if (ov.penalty > 0) noteParts.push("-" + ov.penalty + " injuries");
+    lines.push("**Overall:** " + ov.finalOverall + "  (" + noteParts.join(" · ") + ")");
+    lines.push("**Points:** " + spent() + " / " + POINT_CAP);
+    lines.push("");
+    CATEGORIES.forEach(function (cat) {
+      lines.push("### " + cat.name);
+      cat.attrs.forEach(function (attr) {
+        lines.push("- " + attr + ": " + state[idOf(cat.key, attr)]);
+      });
+      lines.push("");
+    });
+    const chosen = INJURIES.filter(function (i) { return injuryState[i.id]; });
+    lines.push("### Injuries");
+    if (chosen.length) {
+      chosen.forEach(function (i) { lines.push("- " + i.name + " (-" + i.penalty + ")"); });
+    } else {
+      lines.push("- None (fully healthy)");
+    }
+    lines.push("");
+    lines.push("_Submitted via the Build a Player tool._");
+    return lines.join("\n");
+  }
+
+  function buildIssueUrl(name, ov) {
+    const title = "Build: " + name + " (" + ov.finalOverall + " OVR)";
+    return "https://github.com/" + SUBMIT_REPO + "/issues/new" +
+      "?title=" + encodeURIComponent(title) +
+      "&body=" + encodeURIComponent(buildIssueBody(name, ov));
+  }
+
   function submitProfile() {
     const nameInput = document.getElementById("playerName");
     const name = (nameInput && nameInput.value || "").trim();
@@ -854,12 +898,24 @@ input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rg
 
     const profiles = loadProfiles();
     profiles.unshift(profile);
-    if (!saveProfiles(profiles)) {
-      setStatus("Could not save — browser storage is unavailable.", "warn");
-      return;
-    }
-    setStatus("Saved “" + name + "” — Overall " + ov.finalOverall + ".", "ok");
+    saveProfiles(profiles); // local draft copy (non-fatal if storage is off)
     renderSaved();
+
+    // Actually submit: open a pre-filled GitHub Issue to post the build.
+    const url = buildIssueUrl(name, ov);
+    const win = window.open(url, "_blank", "noopener");
+
+    setStatus("“" + name + "” (Overall " + ov.finalOverall + ") — ", "ok");
+    const el = document.getElementById("submitStatus");
+    if (el) {
+      const a = document.createElement("a");
+      a.href = url;
+      a.target = "_blank";
+      a.rel = "noopener";
+      a.className = "submit-link";
+      a.textContent = win ? "finish posting on GitHub →" : "open GitHub to post →";
+      el.appendChild(a);
+    }
   }
 
   function applyProfile(p) {
