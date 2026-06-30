@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>2026 Draft Class — The RJ Project Invitational</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+/* ===== The RJ Project Invitational — 2026 Draft Class ===== */
+:root {
+  --bg:        #060608;
+  --bg-soft:   #0d0f14;
+  --card:      #11141b;
+  --card-2:    #161a23;
+  --line:      #21262f;
+  --track:     #1b1f28;
+  --text:      #f4f6fb;
+  --muted:     #8a94a6;
+  --blue:      #2f6bff;
+  --blue-dim:  #1d4fd6;
+  --display:   "Anton", "Arial Narrow", "Oswald", sans-serif;
+  --mono:      "Space Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--mono);
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
+}
+
+.wrap { width: min(1120px, 92%); margin: 0 auto; }
+
+/* ---------- Header ---------- */
+.site-header {
+  position: sticky; top: 0; z-index: 50;
+  background: #000;
+  border-bottom: 1px solid #15171d;
+}
+.header-inner {
+  width: min(1120px, 92%); margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 78px;
+}
+.brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: #fff; }
+.brand-logo { display: inline-flex; }
+.brand-text {
+  font-family: var(--display);
+  font-size: 1.7rem; letter-spacing: .04em; line-height: 1;
+}
+.brand-text.small { font-size: 1.2rem; }
+.dot { color: var(--blue); }
+
+.site-nav { display: flex; align-items: center; gap: 30px; }
+.site-nav a {
+  font-family: var(--mono);
+  font-size: .82rem; letter-spacing: .12em; text-transform: uppercase;
+  color: #cfd5e0; text-decoration: none; transition: color .15s;
+}
+.site-nav a:hover { color: #fff; }
+.site-nav a.active { color: var(--blue); }
+.nav-cta {
+  border: 1px solid #2a2f3a; padding: 8px 14px; border-radius: 4px;
+}
+.nav-cta:hover { border-color: var(--blue); color: var(--blue) !important; }
+
+/* ---------- Marquee ---------- */
+.marquee {
+  background: var(--blue);
+  overflow: hidden; white-space: nowrap;
+  padding: 10px 0;
+}
+.marquee-track {
+  display: inline-flex; will-change: transform;
+  animation: scroll 26s linear infinite;
+}
+.marquee-track span {
+  font-family: var(--display);
+  font-size: 2.7rem; letter-spacing: .02em; color: #fff;
+  padding-right: .25em;
+}
+@keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .marquee-track { animation: none; } }
+
+/* ---------- Sections ---------- */
+.section { padding: 70px 0; }
+.section-divider { border-top: 1px solid #14171e; }
+.page-title {
+  font-family: var(--display);
+  font-size: clamp(2.2rem, 5vw, 3.2rem);
+  letter-spacing: .02em; margin: 0 0 10px; text-transform: uppercase;
+}
+.page-sub { color: var(--muted); font-size: .9rem; margin: 0 0 36px; max-width: 60ch; }
+
+/* ---------- Roster list ---------- */
+.roster { display: flex; flex-direction: column; }
+.player {
+  padding: 26px 0; border-top: 1px solid var(--line);
+}
+.player:last-child { border-bottom: 1px solid var(--line); }
+.player-head {
+  display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 14px;
+}
+.player-name {
+  font-family: var(--display);
+  font-size: 1.7rem; letter-spacing: .03em; text-transform: uppercase;
+}
+.player-tag {
+  font-family: var(--mono); font-size: .78rem; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--muted);
+}
+.player-tag::before { content: "•  "; color: #3a4150; }
+
+.bar {
+  position: relative; height: 30px; border-radius: 999px;
+  background: var(--track); overflow: hidden;
+}
+.bar-fill {
+  height: 100%; border-radius: 999px;
+  background: linear-gradient(90deg, var(--blue-dim), var(--blue));
+  display: flex; align-items: center; justify-content: center;
+  min-width: 42px;
+  transition: width .9s cubic-bezier(.22,.61,.36,1);
+}
+.bar-fill span {
+  font-family: var(--mono); font-weight: 700; font-size: .8rem; color: #fff;
+}
+
+/* ---------- Builder layout ---------- */
+.builder {
+  display: grid; grid-template-columns: 1fr 320px; gap: 34px; align-items: start;
+}
+@media (max-width: 880px) { .builder { grid-template-columns: 1fr; } }
+
+.attributes { display: flex; flex-direction: column; gap: 28px; }
+.cat {
+  background: var(--bg-soft); border: 1px solid var(--line);
+  border-radius: 10px; padding: 20px 22px;
+}
+.cat-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--line);
+}
+.cat-name {
+  font-family: var(--display); font-size: 1.25rem;
+  letter-spacing: .04em; text-transform: uppercase;
+}
+.cat-sub { font-size: .72rem; color: var(--muted); letter-spacing: .06em; max-width: 34ch; text-align: right; }
+.cat-points {
+  font-family: var(--mono); font-weight: 700; font-size: .8rem; color: var(--blue);
+  white-space: nowrap;
+}
+
+/* attribute row */
+.attr { display: grid; grid-template-columns: 150px 1fr 46px; align-items: center; gap: 14px; padding: 9px 0; }
+.attr-name { font-size: .82rem; letter-spacing: .04em; color: #d7dce6; }
+.attr-value {
+  font-family: var(--mono); font-weight: 700; font-size: .95rem;
+  text-align: right; color: #fff; min-width: 34px;
+}
+@media (max-width: 520px) {
+  .attr { grid-template-columns: 1fr 46px; grid-template-rows: auto auto; }
+  .attr-name { grid-column: 1 / 2; }
+  .attr-value { grid-column: 2 / 3; grid-row: 1; }
+  .attr input[type=range] { grid-column: 1 / 3; }
+}
+
+/* range slider */
+input[type=range] {
+  -webkit-appearance: none; appearance: none; width: 100%; height: 6px;
+  border-radius: 999px; background: var(--track); cursor: pointer; outline: none;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--blue); border: 2px solid #fff; box-shadow: 0 0 0 1px var(--blue);
+}
+input[type=range]::-moz-range-thumb {
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--blue); border: 2px solid #fff;
+}
+input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rgba(47,107,255,.5); }
+
+/* ---------- Summary panel ---------- */
+.summary { position: sticky; top: 96px; display: flex; flex-direction: column; gap: 16px; }
+.summary-card, .overall-card {
+  background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 20px;
+}
+.summary-label { font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 0; }
+.summary-value {
+  font-family: var(--display); font-size: 3.4rem; line-height: 1; margin: 6px 0 14px;
+}
+.summary-value.over { color: #ff5b5b; }
+.summary-value.exact { color: var(--blue); }
+.summary-bar { height: 8px; border-radius: 999px; background: var(--track); overflow: hidden; }
+.summary-bar span {
+  display: block; height: 100%; width: 0;
+  background: linear-gradient(90deg, var(--blue-dim), var(--blue));
+  transition: width .25s ease;
+}
+.summary-bar.over span { background: #ff5b5b; }
+.summary-spent { font-size: .76rem; color: var(--muted); margin: 10px 0 0; }
+
+.cat-totals { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 1px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.cat-totals li {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 11px 16px; background: var(--card); font-size: .78rem; letter-spacing: .04em;
+}
+.cat-totals li span:first-child { color: var(--muted); text-transform: uppercase; letter-spacing: .1em; font-size: .7rem; }
+.cat-totals li b { font-family: var(--mono); color: #fff; }
+
+.overall-card { display: flex; align-items: center; justify-content: space-between; }
+.overall-label { font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.overall-value { font-family: var(--display); font-size: 2.4rem; line-height: 1; color: var(--blue); }
+
+.summary-actions { display: flex; gap: 10px; }
+.btn {
+  flex: 1; font-family: var(--mono); font-size: .74rem; letter-spacing: .1em; text-transform: uppercase;
+  padding: 11px 12px; border-radius: 6px; border: 1px solid transparent;
+  background: var(--blue); color: #fff; cursor: pointer; transition: background .15s, border-color .15s;
+}
+.btn:hover { background: var(--blue-dim); }
+.btn-outline { background: transparent; border-color: #2a2f3a; color: #cfd5e0; }
+.btn-outline:hover { background: var(--card-2); border-color: var(--blue); color: #fff; }
+
+/* ---------- About / footer ---------- */
+.about .page-sub { font-size: .92rem; line-height: 1.7; }
+.site-footer { border-top: 1px solid #14171e; padding: 30px 0; }
+.site-footer .wrap { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.site-footer p { color: var(--muted); font-size: .76rem; margin: 0; }
+
+</style>
+</head>
+<body>
+  <!-- HEADER -->
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="#top" aria-label="Invitational home">
+        <span class="brand-logo" aria-hidden="true">
+          <svg viewBox="0 0 48 48" width="34" height="34">
+            <circle cx="24" cy="24" r="22" fill="none" stroke="#fff" stroke-width="2.5"/>
+            <path d="M24 2v44M2 24h44M7 9c8 6 8 24 0 30M41 9c-8 6-8 24 0 30" fill="none" stroke="#fff" stroke-width="2.5"/>
+          </svg>
+        </span>
+        <span class="brand-text">INVITATIONAL<span class="dot">.</span></span>
+      </a>
+      <nav class="site-nav">
+        <a href="#top">2026 Invitational</a>
+        <a href="#roster" class="active">Draft Class</a>
+        <a href="#about">Past Years</a>
+        <a href="#builder" class="nav-cta">Register Now</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- MARQUEE -->
+  <div class="marquee" id="top" aria-hidden="true">
+    <div class="marquee-track">
+      <span>2026 DRAFT CLASS&nbsp;&nbsp;•&nbsp;&nbsp;2026 DRAFT CLASS&nbsp;&nbsp;•&nbsp;&nbsp;2026 DRAFT CLASS&nbsp;&nbsp;•&nbsp;&nbsp;2026 DRAFT CLASS&nbsp;&nbsp;•&nbsp;&nbsp;</span>
+      <span>2026 DRAFT CLASS&nbsp;&nbsp;•&nbsp;&nbsp;2026 DRAFT CLASS&nbsp;&nbsp;•&nbsp;&nbsp;2026 DRAFT CLASS&nbsp;&nbsp;•&nbsp;&nbsp;2026 DRAFT CLASS&nbsp;&nbsp;•&nbsp;&nbsp;</span>
+    </div>
+  </div>
+
+  <main>
+    <!-- ROSTER -->
+    <section id="roster" class="section">
+      <div class="wrap">
+        <h1 class="page-title">2026 Player List</h1>
+        <p class="page-sub">Players list will update once submissions have been reviewed.</p>
+        <div class="roster" id="rosterList"><!-- filled by JS --></div>
+      </div>
+    </section>
+
+    <!-- ATTRIBUTE BUILDER -->
+    <section id="builder" class="section section-divider">
+      <div class="wrap">
+        <h1 class="page-title">Build a Player</h1>
+        <p class="page-sub">
+          Spend exactly 100 points across the attributes below. Each rating runs 0&ndash;99
+          and the pool is shared — NBA&nbsp;2K style.
+        </p>
+
+        <div class="builder">
+          <!-- attribute categories -->
+          <div class="attributes" id="attributes"><!-- filled by JS --></div>
+
+          <!-- sticky summary -->
+          <aside class="summary" id="summary">
+            <div class="summary-card">
+              <p class="summary-label">Points Remaining</p>
+              <p class="summary-value" id="pointsRemaining">100</p>
+              <div class="summary-bar"><span id="pointsBar"></span></div>
+              <p class="summary-spent"><span id="pointsSpent">0</span> / 100 spent</p>
+            </div>
+
+            <ul class="cat-totals" id="catTotals"><!-- filled by JS --></ul>
+
+            <div class="overall-card">
+              <span class="overall-label">Overall</span>
+              <span class="overall-value" id="overallValue">0</span>
+            </div>
+
+            <div class="summary-actions">
+              <button type="button" class="btn" id="randomizeBtn">Randomize</button>
+              <button type="button" class="btn btn-outline" id="resetBtn">Reset</button>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section id="about" class="section section-divider">
+      <div class="wrap about">
+        <h1 class="page-title">About</h1>
+        <p class="page-sub">
+          The RJ Project Invitational is a community basketball event. This page recreates the
+          2026 Draft Class roster and adds a player-attribute lab inspired by NBA&nbsp;2K's
+          MyPlayer builder — capped at 100 total points so every build is a real trade-off
+          between athleticism, scoring, playmaking, and defense.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <span class="brand-text small">INVITATIONAL<span class="dot">.</span></span>
+      <p>2026 Invitational — fan recreation built for the roster &amp; attribute demo.</p>
+    </div>
+  </footer>
+
+  <script>
+/* ===== 2026 Draft Class — roster + attribute builder ===== */
+(function () {
+  "use strict";
+
+  /* ---------- Roster data (from the 2026 player list) ---------- */
+  const ROSTER = [
+    { name: "Aaron Seminiano", tag: "Mid-Range Sharpshooter", rating: 65 },
+    { name: "Ben Galsim",      tag: "Jack of All Trades",     rating: 55 },
+    { name: "Carlo Teodoro",   tag: "Jack of All Trades",     rating: 70 },
+    { name: "Erick Liamzon",   tag: "Lockdown Defender",      rating: 60 },
+    { name: "Evans Li",        tag: "Crafty Playmaker",       rating: 75 },
+    { name: "Joe Lasala",      tag: "Lockdown Defender",      rating: 65 },
+    { name: "Josh Seminiano",  tag: "Slashing Finisher",      rating: 68 }
+  ];
+
+  function renderRoster() {
+    const host = document.getElementById("rosterList");
+    if (!host) return;
+    host.innerHTML = ROSTER.map(function (p) {
+      return (
+        '<article class="player">' +
+          '<div class="player-head">' +
+            '<span class="player-name">' + p.name + '</span>' +
+            '<span class="player-tag">' + p.tag + '</span>' +
+          '</div>' +
+          '<div class="bar"><div class="bar-fill" style="width:0%">' +
+            '<span>' + p.rating + '%</span>' +
+          '</div></div>' +
+        '</article>'
+      );
+    }).join("");
+
+    // animate bars in after paint
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        host.querySelectorAll(".bar-fill").forEach(function (el, i) {
+          el.style.width = ROSTER[i].rating + "%";
+        });
+      });
+    });
+  }
+
+  /* ---------- Attribute builder ---------- */
+  const POINT_CAP = 100;
+  const ATTR_MAX  = 99;
+
+  const CATEGORIES = [
+    {
+      key: "physicals",
+      name: "Physicals",
+      sub: "Raw athleticism & stamina drain",
+      attrs: ["Speed", "Agility", "Strength", "Vertical", "Stamina"]
+    },
+    {
+      key: "shooting",
+      name: "Shooting & Finishing",
+      sub: "Putting the ball in the basket",
+      attrs: ["Close Shot", "Driving Layup", "Driving Dunk", "Mid-Range", "Three-Point"]
+    },
+    {
+      key: "playmaking",
+      name: "Playmaking",
+      sub: "Creating for yourself and others",
+      attrs: ["Pass Accuracy", "Ball Handle", "Speed with Ball"]
+    },
+    {
+      key: "defense",
+      name: "Defense",
+      sub: "Stops, steals, blocks & boards",
+      attrs: [
+        "Interior Defense", "Perimeter Defense", "Steal",
+        "Block", "Offensive Rebound", "Defensive Rebound"
+      ]
+    }
+  ];
+
+  // state: id -> value
+  const state = {};
+  const idOf = function (cat, attr) {
+    return cat + "::" + attr.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  };
+  const allIds = [];
+
+  CATEGORIES.forEach(function (cat) {
+    cat.attrs.forEach(function (attr) {
+      const id = idOf(cat.key, attr);
+      state[id] = 0;
+      allIds.push(id);
+    });
+  });
+
+  const spent = function () {
+    return allIds.reduce(function (sum, id) { return sum + state[id]; }, 0);
+  };
+  const remaining = function () { return POINT_CAP - spent(); };
+
+  function buildAttributes() {
+    const host = document.getElementById("attributes");
+    if (!host) return;
+
+    host.innerHTML = CATEGORIES.map(function (cat) {
+      const rows = cat.attrs.map(function (attr) {
+        const id = idOf(cat.key, attr);
+        return (
+          '<div class="attr">' +
+            '<label class="attr-name" for="' + id + '">' + attr + '</label>' +
+            '<input type="range" id="' + id + '" min="0" max="' + ATTR_MAX + '" ' +
+              'value="0" step="1" data-id="' + id + '" ' +
+              'aria-label="' + attr + '" />' +
+            '<output class="attr-value" data-out="' + id + '">0</output>' +
+          '</div>'
+        );
+      }).join("");
+
+      return (
+        '<section class="cat">' +
+          '<div class="cat-head">' +
+            '<div>' +
+              '<div class="cat-name">' + cat.name + '</div>' +
+              '<div class="cat-sub">' + cat.sub + '</div>' +
+            '</div>' +
+            '<div class="cat-points" data-cat-points="' + cat.key + '">0 pts</div>' +
+          '</div>' +
+          rows +
+        '</section>'
+      );
+    }).join("");
+
+    host.addEventListener("input", function (e) {
+      const input = e.target;
+      if (!input.matches('input[type="range"]')) return;
+      const id = input.dataset.id;
+      let next = parseInt(input.value, 10) || 0;
+
+      // clamp so the shared pool never goes over the cap
+      const others = spent() - state[id];
+      const max = Math.min(ATTR_MAX, POINT_CAP - others);
+      if (next > max) next = max;
+
+      state[id] = next;
+      input.value = next;
+      render();
+    });
+  }
+
+  function render() {
+    const rem = remaining();
+    const sp = spent();
+
+    // per-attribute outputs
+    allIds.forEach(function (id) {
+      const out = document.querySelector('[data-out="' + id + '"]');
+      if (out) out.textContent = state[id];
+      const input = document.getElementById(id);
+      if (input && parseInt(input.value, 10) !== state[id]) input.value = state[id];
+    });
+
+    // per-category totals
+    CATEGORIES.forEach(function (cat) {
+      const total = cat.attrs.reduce(function (s, attr) { return s + state[idOf(cat.key, attr)]; }, 0);
+      const badge = document.querySelector('[data-cat-points="' + cat.key + '"]');
+      if (badge) badge.textContent = total + " pts";
+      const li = document.querySelector('[data-cat-total="' + cat.key + '"]');
+      if (li) li.textContent = total;
+    });
+
+    // points remaining
+    const remEl = document.getElementById("pointsRemaining");
+    const spentEl = document.getElementById("pointsSpent");
+    const bar = document.getElementById("pointsBar");
+    const barWrap = bar ? bar.parentElement : null;
+    if (remEl) {
+      remEl.textContent = rem;
+      remEl.classList.toggle("exact", rem === 0);
+      remEl.classList.remove("over"); // cap prevents over-spend, but kept for safety
+    }
+    if (spentEl) spentEl.textContent = sp;
+    if (bar) bar.style.width = Math.min(100, (sp / POINT_CAP) * 100) + "%";
+    if (barWrap) barWrap.classList.toggle("over", sp > POINT_CAP);
+
+    // overall = average of all attributes, rounded
+    const overallEl = document.getElementById("overallValue");
+    if (overallEl) overallEl.textContent = Math.round(sp / allIds.length);
+  }
+
+  function buildCatTotals() {
+    const host = document.getElementById("catTotals");
+    if (!host) return;
+    host.innerHTML = CATEGORIES.map(function (cat) {
+      return (
+        '<li><span>' + cat.name + '</span>' +
+        '<b data-cat-total="' + cat.key + '">0</b></li>'
+      );
+    }).join("");
+  }
+
+  function resetAll() {
+    allIds.forEach(function (id) { state[id] = 0; });
+    render();
+  }
+
+  // spread `remaining` points randomly across attributes, never exceeding the cap
+  function randomize() {
+    allIds.forEach(function (id) { state[id] = 0; });
+    let pool = POINT_CAP;
+    let guard = 5000;
+    while (pool > 0 && guard-- > 0) {
+      const id = allIds[Math.floor(Math.random() * allIds.length)];
+      if (state[id] >= ATTR_MAX) continue;
+      const give = Math.min(ATTR_MAX - state[id], 1 + Math.floor(Math.random() * 6), pool);
+      state[id] += give;
+      pool -= give;
+    }
+    render();
+  }
+
+  function init() {
+    renderRoster();
+    buildAttributes();
+    buildCatTotals();
+    render();
+
+    const r = document.getElementById("randomizeBtn");
+    const z = document.getElementById("resetBtn");
+    if (r) r.addEventListener("click", randomize);
+    if (z) z.addEventListener("click", resetAll);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();
+
+</script>
+</body>
+</html>
