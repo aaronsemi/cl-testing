@@ -479,6 +479,24 @@ input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rg
         "Interior Defense", "Perimeter Defense", "Steal",
         "Block", "Offensive Rebound", "Defensive Rebound"
       ]
+    },
+    {
+      key: "handles",
+      name: "Streetball Handles",
+      sub: "Breaking ankles & putting on a show",
+      attrs: [
+        "Ankle Breaker", "Hesi Pull", "Crossover",
+        "Behind-the-Back", "Between-the-Legs", "Spin Move"
+      ]
+    },
+    {
+      key: "swagger",
+      name: "Swagger & Intangibles",
+      sub: "Mind games, flopping & street antics",
+      attrs: [
+        "Trash Talk", "Flopping", "Ball Slapper",
+        "Showboating", "Mind Games", "Clutch Gene"
+      ]
     }
   ];
 
@@ -603,10 +621,19 @@ input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rg
     if (bar) bar.style.width = Math.min(100, (sp / POINT_CAP) * 100) + "%";
     if (barWrap) barWrap.classList.toggle("over", sp > POINT_CAP);
 
-    // overall = average of all attributes, minus injury penalties (floored at 0)
+    // Overall = average of the player's BEST attributes, minus injuries.
+    // A "top N" average (vs. a flat average across every attribute) lets a
+    // focused build climb into the 90s while a thin spread stays lower.
     const penalty = injuryPenalty();
-    const base = Math.round(sp / allIds.length);
-    const finalOverall = Math.max(0, base - penalty);
+    const TOP_N = 8;
+    const topRatings = allIds
+      .map(function (id) { return state[id]; })
+      .sort(function (a, b) { return b - a; })
+      .slice(0, TOP_N);
+    const base = topRatings.length
+      ? Math.round(topRatings.reduce(function (a, b) { return a + b; }, 0) / topRatings.length)
+      : 0;
+    const finalOverall = Math.max(0, Math.min(99, base - penalty));
 
     const overallEl = document.getElementById("overallValue");
     if (overallEl) {
@@ -617,7 +644,7 @@ input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rg
     if (noteEl) {
       noteEl.textContent = penalty > 0
         ? ("Base " + base + " · −" + penalty + " injuries")
-        : "Fully healthy";
+        : ("Avg of top " + TOP_N + " ratings");
     }
     const injTotal = document.querySelector("[data-injury-total]");
     if (injTotal) injTotal.innerHTML = "−" + penalty + " OVR";
