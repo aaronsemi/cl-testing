@@ -25,7 +25,7 @@
       <nav class="site-nav">
         <a href="#top">2026 Invitational</a>
         <a href="#roster" class="active">Draft Class</a>
-        <a href="#about">Past Years</a>
+        <a href="#saved">Saved</a>
         <a href="#builder" class="nav-cta">Register Now</a>
       </nav>
     </div>
@@ -88,12 +88,29 @@
               <span class="overall-value" id="overallValue">0</span>
             </div>
 
+            <button type="button" class="btn btn-submit" id="submitBtn">Submit Profile</button>
+            <p class="submit-status" id="submitStatus" role="status" aria-live="polite"></p>
+
             <div class="summary-actions">
               <button type="button" class="btn" id="randomizeBtn">Randomize</button>
               <button type="button" class="btn btn-outline" id="resetBtn">Reset</button>
             </div>
           </aside>
         </div>
+      </div>
+    </section>
+
+    <!-- SAVED PROFILES -->
+    <section id="saved" class="section section-divider">
+      <div class="wrap">
+        <h1 class="page-title">Saved Profiles</h1>
+        <p class="page-sub">
+          Submitted builds are saved in this browser. Load one back into the builder, or remove it.
+        </p>
+        <p class="saved-empty" id="savedEmpty">
+          No saved profiles yet — build a player and hit <strong>Submit Profile</strong>.
+        </p>
+        <ul class="saved-list" id="savedList"><!-- filled by JS --></ul>
       </div>
     </section>
 

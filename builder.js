@@ -194,6 +194,21 @@
     });
   }
 
+  function computeOverall() {
+    const penalty = injuryPenalty();
+    const flair = flairBonus();
+    const TOP_N = 8;
+    const topRatings = allIds
+      .map(function (id) { return state[id]; })
+      .sort(function (a, b) { return b - a; })
+      .slice(0, TOP_N);
+    const base = topRatings.length
+      ? Math.round(topRatings.reduce(function (a, b) { return a + b; }, 0) / topRatings.length)
+      : 0;
+    const finalOverall = Math.max(0, Math.min(99, base + flair - penalty));
+    return { base: base, flair: flair, penalty: penalty, finalOverall: finalOverall, topN: TOP_N };
+  }
+
   function render() {
     const rem = remaining();
     const sp = spent();
@@ -232,17 +247,12 @@
     // Overall = average of the player's BEST attributes, minus injuries.
     // A "top N" average (vs. a flat average across every attribute) lets a
     // focused build climb into the 90s while a thin spread stays lower.
-    const penalty = injuryPenalty();
-    const flair = flairBonus();
-    const TOP_N = 8;
-    const topRatings = allIds
-      .map(function (id) { return state[id]; })
-      .sort(function (a, b) { return b - a; })
-      .slice(0, TOP_N);
-    const base = topRatings.length
-      ? Math.round(topRatings.reduce(function (a, b) { return a + b; }, 0) / topRatings.length)
-      : 0;
-    const finalOverall = Math.max(0, Math.min(99, base + flair - penalty));
+    const ov = computeOverall();
+    const penalty = ov.penalty;
+    const flair = ov.flair;
+    const TOP_N = ov.topN;
+    const base = ov.base;
+    const finalOverall = ov.finalOverall;
 
     const overallEl = document.getElementById("overallValue");
     if (overallEl) {
@@ -333,6 +343,116 @@
     render();
   }
 
+  /* ---------- Saving profiles (browser localStorage) ---------- */
+  const STORAGE_KEY = "rjp_profiles_v1";
+
+  function loadProfiles() {
+    try {
+      const raw = window.localStorage.getItem(STORAGE_KEY);
+      const arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr : [];
+    } catch (e) { return []; }
+  }
+  function saveProfiles(arr) {
+    try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); return true; }
+    catch (e) { return false; }
+  }
+
+  function setStatus(msg, kind) {
+    const el = document.getElementById("submitStatus");
+    if (!el) return;
+    el.textContent = msg || "";
+    el.className = "submit-status" + (kind ? " " + kind : "");
+  }
+
+  function submitProfile() {
+    const nameInput = document.getElementById("playerName");
+    const name = (nameInput && nameInput.value || "").trim();
+    if (!name) {
+      setStatus("Enter a player name before submitting.", "warn");
+      if (nameInput) nameInput.focus();
+      return;
+    }
+
+    const ov = computeOverall();
+    const attrs = {};
+    allIds.forEach(function (id) { attrs[id] = state[id]; });
+    const injuries = INJURIES.filter(function (i) { return injuryState[i.id]; })
+                             .map(function (i) { return i.id; });
+
+    const profile = {
+      id: "p_" + Date.now() + "_" + Math.floor(Math.random() * 1e6),
+      name: name,
+      overall: ov.finalOverall,
+      spent: spent(),
+      cap: POINT_CAP,
+      attrs: attrs,
+      injuries: injuries,
+      savedAt: new Date().toISOString()
+    };
+
+    const profiles = loadProfiles();
+    profiles.unshift(profile);
+    if (!saveProfiles(profiles)) {
+      setStatus("Could not save — browser storage is unavailable.", "warn");
+      return;
+    }
+    setStatus("Saved “" + name + "” — Overall " + ov.finalOverall + ".", "ok");
+    renderSaved();
+  }
+
+  function applyProfile(p) {
+    allIds.forEach(function (id) { state[id] = (p.attrs && typeof p.attrs[id] === "number") ? p.attrs[id] : 0; });
+    INJURIES.forEach(function (i) { injuryState[i.id] = (p.injuries || []).indexOf(i.id) !== -1; });
+    document.querySelectorAll("input[data-injury]").forEach(function (cb) {
+      cb.checked = injuryState[cb.dataset.injury];
+    });
+    const nameInput = document.getElementById("playerName");
+    if (nameInput) { nameInput.value = p.name || ""; syncBuildName(nameInput.value); }
+    render();
+    setStatus("Loaded “" + (p.name || "build") + "”.", "ok");
+    const builder = document.getElementById("builder");
+    if (builder && builder.scrollIntoView) builder.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function deleteProfile(id) {
+    const profiles = loadProfiles().filter(function (p) { return p.id !== id; });
+    saveProfiles(profiles);
+    renderSaved();
+  }
+
+  function renderSaved() {
+    const host = document.getElementById("savedList");
+    const empty = document.getElementById("savedEmpty");
+    if (!host) return;
+    const profiles = loadProfiles();
+
+    if (empty) empty.style.display = profiles.length ? "none" : "";
+
+    host.innerHTML = profiles.map(function (p) {
+      const inj = (p.injuries && p.injuries.length) ? (p.injuries.length + " injur" + (p.injuries.length === 1 ? "y" : "ies")) : "healthy";
+      return (
+        '<li class="saved-item">' +
+          '<span class="saved-ovr">' + p.overall + '</span>' +
+          '<span class="saved-info">' +
+            '<span class="saved-name">' + escapeHtml(p.name) + '</span>' +
+            '<span class="saved-meta">' + p.spent + " pts · " + inj + '</span>' +
+          '</span>' +
+          '<span class="saved-actions">' +
+            '<button type="button" class="btn btn-outline btn-sm" data-load="' + p.id + '">Load</button>' +
+            '<button type="button" class="btn btn-outline btn-sm" data-del="' + p.id + '">Delete</button>' +
+          '</span>' +
+        '</li>'
+      );
+    }).join("");
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
   function syncBuildName(value) {
     const out = document.getElementById("buildName");
     if (!out) return;
@@ -357,6 +477,24 @@
     const z = document.getElementById("resetBtn");
     if (r) r.addEventListener("click", randomize);
     if (z) z.addEventListener("click", resetAll);
+
+    const submit = document.getElementById("submitBtn");
+    if (submit) submit.addEventListener("click", submitProfile);
+
+    const savedList = document.getElementById("savedList");
+    if (savedList) {
+      savedList.addEventListener("click", function (e) {
+        const loadBtn = e.target.closest("[data-load]");
+        const delBtn = e.target.closest("[data-del]");
+        if (loadBtn) {
+          const p = loadProfiles().filter(function (x) { return x.id === loadBtn.dataset.load; })[0];
+          if (p) applyProfile(p);
+        } else if (delBtn) {
+          deleteProfile(delBtn.dataset.del);
+        }
+      });
+    }
+    renderSaved();
   }
 
   if (document.readyState === "loading") {
