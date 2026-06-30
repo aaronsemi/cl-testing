@@ -242,9 +242,41 @@ input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rg
 .cat-totals li span:first-child { color: var(--muted); text-transform: uppercase; letter-spacing: .1em; font-size: .7rem; }
 .cat-totals li b { font-family: var(--mono); color: #fff; }
 
-.overall-card { display: flex; align-items: center; justify-content: space-between; }
+.overall-card { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.overall-meta { display: flex; flex-direction: column; gap: 4px; }
 .overall-label { font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.overall-note { font-size: .68rem; letter-spacing: .04em; color: #6b7585; }
 .overall-value { font-family: var(--display); font-size: 2.4rem; line-height: 1; color: var(--blue); }
+.overall-value.hurt { color: #ff5b5b; }
+
+/* ---------- Injury panel ---------- */
+.injury-cat .cat-name::before { content: "\271A"; color: #ff5b5b; margin-right: 8px; font-size: .9em; }
+.injury-total { color: #ff7a7a !important; }
+.injury {
+  display: grid; grid-template-columns: 22px 1fr auto; align-items: center; gap: 14px;
+  padding: 11px 0; cursor: pointer; border-top: 1px solid var(--line);
+}
+.injury:first-of-type { border-top: none; }
+.injury input[type="checkbox"] { position: absolute; opacity: 0; width: 0; height: 0; }
+.injury-box {
+  width: 20px; height: 20px; border-radius: 5px;
+  border: 1px solid #39414f; background: var(--track);
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: background .15s, border-color .15s;
+}
+.injury input:checked + .injury-box { background: #ff5b5b; border-color: #ff5b5b; }
+.injury input:checked + .injury-box::after {
+  content: "\2713"; color: #fff; font-size: .8rem; font-weight: 700; line-height: 1;
+}
+.injury input:focus-visible + .injury-box { box-shadow: 0 0 0 3px rgba(255,91,91,.4); }
+.injury-info { display: flex; flex-direction: column; gap: 2px; }
+.injury-name { font-size: .85rem; letter-spacing: .03em; color: #e6c9c9; }
+.injury input:checked ~ .injury-info .injury-name { color: #ff9b9b; }
+.injury-note { font-size: .68rem; color: var(--muted); letter-spacing: .03em; }
+.injury-pen {
+  font-family: var(--mono); font-weight: 700; font-size: .72rem;
+  letter-spacing: .05em; color: #ff7a7a; white-space: nowrap;
+}
 
 .summary-actions { display: flex; gap: 10px; }
 .btn {
@@ -336,7 +368,10 @@ input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rg
             <ul class="cat-totals" id="catTotals"><!-- filled by JS --></ul>
 
             <div class="overall-card">
-              <span class="overall-label">Overall</span>
+              <div class="overall-meta">
+                <span class="overall-label">Overall</span>
+                <span class="overall-note" id="overallNote">Fully healthy</span>
+              </div>
               <span class="overall-value" id="overallValue">0</span>
             </div>
 
@@ -467,6 +502,23 @@ input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rg
   };
   const remaining = function () { return POINT_CAP - spent(); };
 
+  /* ---------- Injuries (each ailment docks Overall points) ---------- */
+  const INJURIES = [
+    { id: "ankles",     name: "Glass Ankles",          penalty: 3, note: "Rolls ankles on hard cuts" },
+    { id: "knees",      name: "Bad Knees",             penalty: 5, note: "Cartilage wear; explosive moves risky" },
+    { id: "back",       name: "Chronic Back",          penalty: 4, note: "Tightens up over heavy minutes" },
+    { id: "hamstring",  name: "Hamstring Issues",      penalty: 3, note: "Strains on full sprints" },
+    { id: "achilles",   name: "Achilles / Foot",       penalty: 5, note: "High re-injury risk" },
+    { id: "shoulder",   name: "Shoulder Problems",     penalty: 3, note: "Affects contact & shooting" },
+    { id: "concussion", name: "Concussion History",    penalty: 4, note: "Protocol absences" },
+    { id: "brittle",    name: "Injury Prone (Brittle)", penalty: 6, note: "Frequent soft-tissue injuries" }
+  ];
+  const injuryState = {};
+  INJURIES.forEach(function (i) { injuryState[i.id] = false; });
+  const injuryPenalty = function () {
+    return INJURIES.reduce(function (s, i) { return s + (injuryState[i.id] ? i.penalty : 0); }, 0);
+  };
+
   function buildAttributes() {
     const host = document.getElementById("attributes");
     if (!host) return;
@@ -551,9 +603,60 @@ input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rg
     if (bar) bar.style.width = Math.min(100, (sp / POINT_CAP) * 100) + "%";
     if (barWrap) barWrap.classList.toggle("over", sp > POINT_CAP);
 
-    // overall = average of all attributes, rounded
+    // overall = average of all attributes, minus injury penalties (floored at 0)
+    const penalty = injuryPenalty();
+    const base = Math.round(sp / allIds.length);
+    const finalOverall = Math.max(0, base - penalty);
+
     const overallEl = document.getElementById("overallValue");
-    if (overallEl) overallEl.textContent = Math.round(sp / allIds.length);
+    if (overallEl) {
+      overallEl.textContent = finalOverall;
+      overallEl.classList.toggle("hurt", penalty > 0);
+    }
+    const noteEl = document.getElementById("overallNote");
+    if (noteEl) {
+      noteEl.textContent = penalty > 0
+        ? ("Base " + base + " · −" + penalty + " injuries")
+        : "Fully healthy";
+    }
+    const injTotal = document.querySelector("[data-injury-total]");
+    if (injTotal) injTotal.innerHTML = "−" + penalty + " OVR";
+  }
+
+  function buildInjuries() {
+    const host = document.getElementById("attributes");
+    if (!host) return;
+
+    const rows = INJURIES.map(function (i) {
+      return (
+        '<label class="injury">' +
+          '<input type="checkbox" data-injury="' + i.id + '" />' +
+          '<span class="injury-box" aria-hidden="true"></span>' +
+          '<span class="injury-info">' +
+            '<span class="injury-name">' + i.name + '</span>' +
+            '<span class="injury-note">' + i.note + '</span>' +
+          '</span>' +
+          '<span class="injury-pen">&minus;' + i.penalty + ' OVR</span>' +
+        '</label>'
+      );
+    }).join("");
+
+    const sec = document.createElement("section");
+    sec.className = "cat injury-cat";
+    sec.innerHTML =
+      '<div class="cat-head"><div>' +
+        '<div class="cat-name">Injury Profile</div>' +
+        '<div class="cat-sub">Pre-existing ailments — each lowers Overall</div>' +
+      '</div><div class="cat-points injury-total" data-injury-total>&minus;0 OVR</div></div>' +
+      rows;
+    host.appendChild(sec);
+
+    sec.addEventListener("change", function (e) {
+      const cb = e.target;
+      if (!cb.matches('input[type="checkbox"]')) return;
+      injuryState[cb.dataset.injury] = cb.checked;
+      render();
+    });
   }
 
   function buildCatTotals() {
@@ -569,6 +672,8 @@ input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rg
 
   function resetAll() {
     allIds.forEach(function (id) { state[id] = 0; });
+    INJURIES.forEach(function (i) { injuryState[i.id] = false; });
+    document.querySelectorAll('input[data-injury]').forEach(function (cb) { cb.checked = false; });
     render();
   }
 
@@ -597,6 +702,7 @@ input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rg
   function init() {
     renderRoster();
     buildAttributes();
+    buildInjuries();
     buildCatTotals();
     render();
 

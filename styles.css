@@ -232,9 +232,41 @@ input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rg
 .cat-totals li span:first-child { color: var(--muted); text-transform: uppercase; letter-spacing: .1em; font-size: .7rem; }
 .cat-totals li b { font-family: var(--mono); color: #fff; }
 
-.overall-card { display: flex; align-items: center; justify-content: space-between; }
+.overall-card { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.overall-meta { display: flex; flex-direction: column; gap: 4px; }
 .overall-label { font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.overall-note { font-size: .68rem; letter-spacing: .04em; color: #6b7585; }
 .overall-value { font-family: var(--display); font-size: 2.4rem; line-height: 1; color: var(--blue); }
+.overall-value.hurt { color: #ff5b5b; }
+
+/* ---------- Injury panel ---------- */
+.injury-cat .cat-name::before { content: "\271A"; color: #ff5b5b; margin-right: 8px; font-size: .9em; }
+.injury-total { color: #ff7a7a !important; }
+.injury {
+  display: grid; grid-template-columns: 22px 1fr auto; align-items: center; gap: 14px;
+  padding: 11px 0; cursor: pointer; border-top: 1px solid var(--line);
+}
+.injury:first-of-type { border-top: none; }
+.injury input[type="checkbox"] { position: absolute; opacity: 0; width: 0; height: 0; }
+.injury-box {
+  width: 20px; height: 20px; border-radius: 5px;
+  border: 1px solid #39414f; background: var(--track);
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: background .15s, border-color .15s;
+}
+.injury input:checked + .injury-box { background: #ff5b5b; border-color: #ff5b5b; }
+.injury input:checked + .injury-box::after {
+  content: "\2713"; color: #fff; font-size: .8rem; font-weight: 700; line-height: 1;
+}
+.injury input:focus-visible + .injury-box { box-shadow: 0 0 0 3px rgba(255,91,91,.4); }
+.injury-info { display: flex; flex-direction: column; gap: 2px; }
+.injury-name { font-size: .85rem; letter-spacing: .03em; color: #e6c9c9; }
+.injury input:checked ~ .injury-info .injury-name { color: #ff9b9b; }
+.injury-note { font-size: .68rem; color: var(--muted); letter-spacing: .03em; }
+.injury-pen {
+  font-family: var(--mono); font-weight: 700; font-size: .72rem;
+  letter-spacing: .05em; color: #ff7a7a; white-space: nowrap;
+}
 
 .summary-actions { display: flex; gap: 10px; }
 .btn {

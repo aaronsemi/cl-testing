@@ -94,6 +94,23 @@
   };
   const remaining = function () { return POINT_CAP - spent(); };
 
+  /* ---------- Injuries (each ailment docks Overall points) ---------- */
+  const INJURIES = [
+    { id: "ankles",     name: "Glass Ankles",          penalty: 3, note: "Rolls ankles on hard cuts" },
+    { id: "knees",      name: "Bad Knees",             penalty: 5, note: "Cartilage wear; explosive moves risky" },
+    { id: "back",       name: "Chronic Back",          penalty: 4, note: "Tightens up over heavy minutes" },
+    { id: "hamstring",  name: "Hamstring Issues",      penalty: 3, note: "Strains on full sprints" },
+    { id: "achilles",   name: "Achilles / Foot",       penalty: 5, note: "High re-injury risk" },
+    { id: "shoulder",   name: "Shoulder Problems",     penalty: 3, note: "Affects contact & shooting" },
+    { id: "concussion", name: "Concussion History",    penalty: 4, note: "Protocol absences" },
+    { id: "brittle",    name: "Injury Prone (Brittle)", penalty: 6, note: "Frequent soft-tissue injuries" }
+  ];
+  const injuryState = {};
+  INJURIES.forEach(function (i) { injuryState[i.id] = false; });
+  const injuryPenalty = function () {
+    return INJURIES.reduce(function (s, i) { return s + (injuryState[i.id] ? i.penalty : 0); }, 0);
+  };
+
   function buildAttributes() {
     const host = document.getElementById("attributes");
     if (!host) return;
@@ -178,9 +195,60 @@
     if (bar) bar.style.width = Math.min(100, (sp / POINT_CAP) * 100) + "%";
     if (barWrap) barWrap.classList.toggle("over", sp > POINT_CAP);
 
-    // overall = average of all attributes, rounded
+    // overall = average of all attributes, minus injury penalties (floored at 0)
+    const penalty = injuryPenalty();
+    const base = Math.round(sp / allIds.length);
+    const finalOverall = Math.max(0, base - penalty);
+
     const overallEl = document.getElementById("overallValue");
-    if (overallEl) overallEl.textContent = Math.round(sp / allIds.length);
+    if (overallEl) {
+      overallEl.textContent = finalOverall;
+      overallEl.classList.toggle("hurt", penalty > 0);
+    }
+    const noteEl = document.getElementById("overallNote");
+    if (noteEl) {
+      noteEl.textContent = penalty > 0
+        ? ("Base " + base + " · −" + penalty + " injuries")
+        : "Fully healthy";
+    }
+    const injTotal = document.querySelector("[data-injury-total]");
+    if (injTotal) injTotal.innerHTML = "−" + penalty + " OVR";
+  }
+
+  function buildInjuries() {
+    const host = document.getElementById("attributes");
+    if (!host) return;
+
+    const rows = INJURIES.map(function (i) {
+      return (
+        '<label class="injury">' +
+          '<input type="checkbox" data-injury="' + i.id + '" />' +
+          '<span class="injury-box" aria-hidden="true"></span>' +
+          '<span class="injury-info">' +
+            '<span class="injury-name">' + i.name + '</span>' +
+            '<span class="injury-note">' + i.note + '</span>' +
+          '</span>' +
+          '<span class="injury-pen">&minus;' + i.penalty + ' OVR</span>' +
+        '</label>'
+      );
+    }).join("");
+
+    const sec = document.createElement("section");
+    sec.className = "cat injury-cat";
+    sec.innerHTML =
+      '<div class="cat-head"><div>' +
+        '<div class="cat-name">Injury Profile</div>' +
+        '<div class="cat-sub">Pre-existing ailments — each lowers Overall</div>' +
+      '</div><div class="cat-points injury-total" data-injury-total>&minus;0 OVR</div></div>' +
+      rows;
+    host.appendChild(sec);
+
+    sec.addEventListener("change", function (e) {
+      const cb = e.target;
+      if (!cb.matches('input[type="checkbox"]')) return;
+      injuryState[cb.dataset.injury] = cb.checked;
+      render();
+    });
   }
 
   function buildCatTotals() {
@@ -196,6 +264,8 @@
 
   function resetAll() {
     allIds.forEach(function (id) { state[id] = 0; });
+    INJURIES.forEach(function (i) { injuryState[i.id] = false; });
+    document.querySelectorAll('input[data-injury]').forEach(function (cb) { cb.checked = false; });
     render();
   }
 
@@ -224,6 +294,7 @@
   function init() {
     renderRoster();
     buildAttributes();
+    buildInjuries();
     buildCatTotals();
     render();
 
