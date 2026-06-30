@@ -41,7 +41,7 @@
   }
 
   /* ---------- Attribute builder ---------- */
-  const POINT_CAP = 250;
+  const POINT_CAP = 1500;
   const ATTR_MAX  = 99;
 
   const CATEGORIES = [

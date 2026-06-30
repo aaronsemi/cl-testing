@@ -309,7 +309,7 @@ input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rg
       <div class="wrap">
         <h1 class="page-title">Build a Player</h1>
         <p class="page-sub">
-          Spend exactly 250 points across the attributes below. Each rating runs 0&ndash;99
+          Spend exactly 1500 points across the attributes below. Each rating runs 0&ndash;99
           and the pool is shared — NBA&nbsp;2K style.
         </p>
 
@@ -328,9 +328,9 @@ input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rg
             <div class="summary-card">
               <p class="build-name" id="buildName">Your Build</p>
               <p class="summary-label">Points Remaining</p>
-              <p class="summary-value" id="pointsRemaining">250</p>
+              <p class="summary-value" id="pointsRemaining">1500</p>
               <div class="summary-bar"><span id="pointsBar"></span></div>
-              <p class="summary-spent"><span id="pointsSpent">0</span> / 250 spent</p>
+              <p class="summary-spent"><span id="pointsSpent">0</span> / 1500 spent</p>
             </div>
 
             <ul class="cat-totals" id="catTotals"><!-- filled by JS --></ul>
@@ -414,7 +414,7 @@ input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rg
   }
 
   /* ---------- Attribute builder ---------- */
-  const POINT_CAP = 250;
+  const POINT_CAP = 1500;
   const ATTR_MAX  = 99;
 
   const CATEGORIES = [
