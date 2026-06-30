@@ -41,7 +41,7 @@
   }
 
   /* ---------- Attribute builder ---------- */
-  const POINT_CAP = 100;
+  const POINT_CAP = 250;
   const ATTR_MAX  = 99;
 
   const CATEGORIES = [
@@ -214,11 +214,24 @@
     render();
   }
 
+  function syncBuildName(value) {
+    const out = document.getElementById("buildName");
+    if (!out) return;
+    const name = (value || "").trim();
+    out.textContent = name ? name + "'s Build" : "Your Build";
+  }
+
   function init() {
     renderRoster();
     buildAttributes();
     buildCatTotals();
     render();
+
+    const nameInput = document.getElementById("playerName");
+    if (nameInput) {
+      nameInput.addEventListener("input", function () { syncBuildName(nameInput.value); });
+      syncBuildName(nameInput.value);
+    }
 
     const r = document.getElementById("randomizeBtn");
     const z = document.getElementById("resetBtn");

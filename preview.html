@@ -134,6 +134,30 @@ body {
   font-family: var(--mono); font-weight: 700; font-size: .8rem; color: #fff;
 }
 
+/* ---------- Name field ---------- */
+.name-row {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  margin: 0 0 28px;
+}
+.name-row label {
+  font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted);
+}
+.name-row input {
+  flex: 1; min-width: 200px; max-width: 420px;
+  background: var(--bg-soft); border: 1px solid var(--line); border-radius: 8px;
+  color: var(--text); font-family: var(--display); font-size: 1.35rem;
+  letter-spacing: .03em; padding: 10px 16px; outline: none;
+  transition: border-color .15s;
+}
+.name-row input::placeholder { color: #3f4655; font-family: var(--mono); font-size: .9rem; letter-spacing: .04em; }
+.name-row input:focus { border-color: var(--blue); }
+
+.build-name {
+  font-family: var(--display); font-size: 1.35rem; letter-spacing: .03em;
+  margin: 0 0 14px; padding-bottom: 12px; border-bottom: 1px solid var(--line);
+  color: #fff; overflow-wrap: anywhere;
+}
+
 /* ---------- Builder layout ---------- */
 .builder {
   display: grid; grid-template-columns: 1fr 320px; gap: 34px; align-items: start;
@@ -285,9 +309,15 @@ input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rg
       <div class="wrap">
         <h1 class="page-title">Build a Player</h1>
         <p class="page-sub">
-          Spend exactly 100 points across the attributes below. Each rating runs 0&ndash;99
+          Spend exactly 250 points across the attributes below. Each rating runs 0&ndash;99
           and the pool is shared — NBA&nbsp;2K style.
         </p>
+
+        <div class="name-row">
+          <label for="playerName">Player Name</label>
+          <input type="text" id="playerName" maxlength="24" autocomplete="off"
+                 spellcheck="false" placeholder="Put your name…" />
+        </div>
 
         <div class="builder">
           <!-- attribute categories -->
@@ -296,10 +326,11 @@ input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rg
           <!-- sticky summary -->
           <aside class="summary" id="summary">
             <div class="summary-card">
+              <p class="build-name" id="buildName">Your Build</p>
               <p class="summary-label">Points Remaining</p>
-              <p class="summary-value" id="pointsRemaining">100</p>
+              <p class="summary-value" id="pointsRemaining">250</p>
               <div class="summary-bar"><span id="pointsBar"></span></div>
-              <p class="summary-spent"><span id="pointsSpent">0</span> / 100 spent</p>
+              <p class="summary-spent"><span id="pointsSpent">0</span> / 250 spent</p>
             </div>
 
             <ul class="cat-totals" id="catTotals"><!-- filled by JS --></ul>
@@ -383,7 +414,7 @@ input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rg
   }
 
   /* ---------- Attribute builder ---------- */
-  const POINT_CAP = 100;
+  const POINT_CAP = 250;
   const ATTR_MAX  = 99;
 
   const CATEGORIES = [
@@ -556,11 +587,24 @@ input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rg
     render();
   }
 
+  function syncBuildName(value) {
+    const out = document.getElementById("buildName");
+    if (!out) return;
+    const name = (value || "").trim();
+    out.textContent = name ? name + "'s Build" : "Your Build";
+  }
+
   function init() {
     renderRoster();
     buildAttributes();
     buildCatTotals();
     render();
+
+    const nameInput = document.getElementById("playerName");
+    if (nameInput) {
+      nameInput.addEventListener("input", function () { syncBuildName(nameInput.value); });
+      syncBuildName(nameInput.value);
+    }
 
     const r = document.getElementById("randomizeBtn");
     const z = document.getElementById("resetBtn");
