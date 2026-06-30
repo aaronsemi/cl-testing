@@ -515,6 +515,22 @@ input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rg
     });
   });
 
+  // Streetball Handles + Swagger feed a separate "flair" bonus to the Overall,
+  // so investing in them always nudges your rating (up to +FLAIR_MAX) even when
+  // those ratings don't crack your top-8 core attributes.
+  const STREET_KEYS = { handles: true, swagger: true };
+  const streetIds = [];
+  CATEGORIES.forEach(function (cat) {
+    if (!STREET_KEYS[cat.key]) return;
+    cat.attrs.forEach(function (attr) { streetIds.push(idOf(cat.key, attr)); });
+  });
+  const FLAIR_MAX = 6;
+  const flairBonus = function () {
+    if (!streetIds.length) return 0;
+    const sum = streetIds.reduce(function (s, id) { return s + state[id]; }, 0);
+    return Math.round((sum / (streetIds.length * ATTR_MAX)) * FLAIR_MAX);
+  };
+
   const spent = function () {
     return allIds.reduce(function (sum, id) { return sum + state[id]; }, 0);
   };
@@ -625,6 +641,7 @@ input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rg
     // A "top N" average (vs. a flat average across every attribute) lets a
     // focused build climb into the 90s while a thin spread stays lower.
     const penalty = injuryPenalty();
+    const flair = flairBonus();
     const TOP_N = 8;
     const topRatings = allIds
       .map(function (id) { return state[id]; })
@@ -633,7 +650,7 @@ input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rg
     const base = topRatings.length
       ? Math.round(topRatings.reduce(function (a, b) { return a + b; }, 0) / topRatings.length)
       : 0;
-    const finalOverall = Math.max(0, Math.min(99, base - penalty));
+    const finalOverall = Math.max(0, Math.min(99, base + flair - penalty));
 
     const overallEl = document.getElementById("overallValue");
     if (overallEl) {
@@ -642,9 +659,14 @@ input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rg
     }
     const noteEl = document.getElementById("overallNote");
     if (noteEl) {
-      noteEl.textContent = penalty > 0
-        ? ("Base " + base + " · −" + penalty + " injuries")
-        : ("Avg of top " + TOP_N + " ratings");
+      if (flair === 0 && penalty === 0) {
+        noteEl.textContent = "Avg of top " + TOP_N + " ratings";
+      } else {
+        const parts = ["Top " + TOP_N + " " + base];
+        if (flair > 0) parts.push("+" + flair + " flair");
+        if (penalty > 0) parts.push("−" + penalty + " injuries");
+        noteEl.textContent = parts.join(" · ");
+      }
     }
     const injTotal = document.querySelector("[data-injury-total]");
     if (injTotal) injTotal.innerHTML = "−" + penalty + " OVR";
