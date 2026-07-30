@@ -228,5 +228,56 @@ add_dropdown(ws_try, try_header, 10, "=Lists!$A$2:$A$7")
 add_dropdown(ws_camp, camp_header, 3, "=Lists!$C$2:$C$8")
 add_dropdown(ws_camp, camp_header, 12, "=Lists!$A$2:$A$7")
 
+# ==========================================================================
+# Club Sources tab  (drives the automated updater)
+# ==========================================================================
+ws_src = wb.create_sheet("Club Sources")
+ws_src.sheet_view.showGridLines = False
+ws_src.cell(row=1, column=1, value="Club Sources").font = TITLE_FONT
+ws_src.merge_cells(start_row=1, start_column=1, end_row=1, end_column=6)
+ws_src.cell(row=2, column=1,
+            value="The Apps Script updater reads this tab. Fill in each club's website / "
+                  "registration page and the script pulls tryout & camp dates from it on a schedule.").font = SUB_FONT
+ws_src.merge_cells(start_row=2, start_column=1, end_row=2, end_column=6)
+
+src_cols = [
+    ("Club / Program", 24),
+    ("Website URL", 34),
+    ("Registration / Linktree URL", 34),
+    ("Instagram", 26),
+    ("City", 14),
+    ("Auto-pull? (Y/N)", 15),
+]
+src_header = 4
+for idx, (label, width) in enumerate(src_cols, start=1):
+    c = ws_src.cell(row=src_header, column=idx, value=label)
+    c.font = HEADER_FONT
+    c.fill = HEADER_FILL
+    c.alignment = Alignment(wrap_text=True, vertical="center", horizontal="center")
+    c.border = BORDER
+    ws_src.column_dimensions[get_column_letter(idx)].width = width
+ws_src.row_dimensions[src_header].height = 28
+
+# Seed with the known Vancouver clubs — URLs get filled in as they're confirmed.
+vancouver_clubs = [
+    "Split Second Basketball", "Rain City", "Vancity", "Greenlight",
+    "Journey", "Squad International", "Drive", "Alamat Allstars",
+    "Prospect Basketball", "RBL Basketball", "Dime Hoops Basketball", "Empower Basketball",
+]
+for i, club in enumerate(vancouver_clubs):
+    row = src_header + 1 + i
+    band = i % 2 == 1
+    values = [club, "", "", "", "Vancouver", "Y"]
+    for idx, val in enumerate(values, start=1):
+        c = ws_src.cell(row=row, column=idx, value=val)
+        c.font = BODY_FONT
+        c.alignment = WRAP_TOP
+        c.border = BORDER
+        if band:
+            c.fill = BAND_FILL
+        if idx in (2, 3, 4) and not val:  # URL cells to fill in
+            c.fill = INPUT_FILL
+ws_src.freeze_panes = ws_src.cell(row=src_header + 1, column=1)
+
 wb.save("basketball_club_updates.xlsx")
 print("Wrote basketball_club_updates.xlsx")
