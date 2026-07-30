@@ -100,7 +100,7 @@ for kind, text in readme:
 # helper to build a data tab
 # ==========================================================================
 
-def build_tab(name, columns, example_row):
+def build_tab(name, columns, example_row, seed_rows=None):
     ws = wb.create_sheet(name)
     ws.sheet_view.showGridLines = False
 
@@ -126,8 +126,23 @@ def build_tab(name, columns, example_row):
         c.alignment = WRAP_TOP
         c.border = BORDER
 
+    # real seeded data rows (from research)
+    seed_rows = seed_rows or []
+    next_row = er + 1
+    for i, data in enumerate(seed_rows):
+        row = next_row + i
+        band = (row - er) % 2 == 1
+        for idx in range(1, len(columns) + 1):
+            c = ws.cell(row=row, column=idx, value=data[idx - 1] if idx - 1 < len(data) else None)
+            c.font = BODY_FONT
+            c.alignment = WRAP_TOP
+            c.border = BORDER
+            if band:
+                c.fill = BAND_FILL
+    next_row += len(seed_rows)
+
     # empty formatted rows for typing
-    for row in range(er + 1, er + 40):
+    for row in range(next_row, next_row + 34):
         band = (row - er) % 2 == 1
         for idx in range(1, len(columns) + 1):
             c = ws.cell(row=row, column=idx)
@@ -164,7 +179,22 @@ tryout_example = [
     150, "https://elitehoops.example.com/tryouts", "Open",
     "Bring water + reversible jersey", "2026-07-27",
 ]
-ws_try, try_header = build_tab("Club Tryouts", tryout_cols, tryout_example)
+# Real Vancouver-club tryout leads found in research. Dates are search-derived
+# and NOT page-verified (club sites were unreachable from the research
+# sandbox), so they carry Status = REVIEW until confirmed on the source page.
+UPD = "2026-07-30"
+tryout_seed = [
+    ["Rain City", "U10-U18 B/G", "2026-03-30", "2026-06-15", "Vancouver", "BC",
+     "RayCam Co-op Community Centre", 30, "https://www.raincitybasketball.ca/register",
+     "REVIEW", "ID sessions $30. Dates shown are the Spring season window (Mar 30-Jun 15); confirm exact tryout date/time on site.", UPD],
+    ["Drive", "Boys 9-17", "", "", "Vancouver", "BC",
+     "", "", "https://drivebasketball.com/drive-team-tryouts/",
+     "REVIEW", "Fall club tryouts ~Sept 9 (year unconfirmed); registration opens mid-July. Confirm on site.", UPD],
+    ["Squad International", "Grades 3-7", "", "", "Vancouver", "BC",
+     "St Patrick's HS gym", "", "https://squadbasketball.hoopstir.com/",
+     "REVIEW", "'Dream Hoops Combine' selects teams. A Sept 7-8 combine date appears in search but likely 2024 - confirm 2026 date on Hoopstir portal.", UPD],
+]
+ws_try, try_header = build_tab("Club Tryouts", tryout_cols, tryout_example, tryout_seed)
 
 # ==========================================================================
 # Club Camps tab
@@ -191,7 +221,27 @@ camp_example = [
     275, "https://elitehoops.example.com/camps", "Open",
     "Lunch included; half-day option", "2026-07-27",
 ]
-ws_camp, camp_header = build_tab("Club Camps", camp_cols, camp_example)
+# Real Vancouver-club camp leads. Journey's Champlain Heights camp is the one
+# firmly-dated event (community-centre event page); the rest are REVIEW.
+camp_seed = [
+    ["Journey", "Journey Basketball Camp", "Day Camp", "Ages 6-8", "2026-08-17", "2026-08-21",
+     "Vancouver", "BC", "Champlain Heights Community Centre", "",
+     "https://champlainheightscc.ca/event/journey-basketball-camp-6-8yrs-3/", "Open",
+     "Mon-Fri 1:00-2:30 PM. Confirmed via community-centre event page; verify cost.", UPD],
+    ["Drive", "HoopSoles Rising Stars Camp", "Day Camp", "Ages 8-16", "", "",
+     "Vancouver", "BC", "The Hoop Vancouver", 1000,
+     "https://drivebasketball.com/camps/", "REVIEW",
+     "July camps ~$1000+tax, Aug ~$800+tax (unverified search snippet). Confirm dates on site.", UPD],
+    ["Greenlight", "Foundations Camp", "Skills Camp", "", "", "",
+     "Vancouver", "BC", "Killarney Community Centre", "",
+     "https://ca.apm.activecommunities.com/vancouver/Activity_Search/greenlight-basketball---foundations-camp/521010",
+     "REVIEW", "Dates/cost not public in search; confirm on Vancouver ActiveNet listing.", UPD],
+    ["Split Second", "3-on-3 Summer League", "Clinic", "Grades 4-12", "", "",
+     "Vancouver", "BC", "", "",
+     "https://splitsecondbasketball.leagueapps.com/", "REVIEW",
+     "Summer league (Tue/Thu). Confirm session dates on LeagueApps.", UPD],
+]
+ws_camp, camp_header = build_tab("Club Camps", camp_cols, camp_example, camp_seed)
 
 # ==========================================================================
 # Lists tab (dropdown sources)
@@ -258,16 +308,48 @@ for idx, (label, width) in enumerate(src_cols, start=1):
     ws_src.column_dimensions[get_column_letter(idx)].width = width
 ws_src.row_dimensions[src_header].height = 28
 
-# Seed with the known Vancouver clubs — URLs get filled in as they're confirmed.
+# Seed with the known Vancouver clubs and the URLs confirmed in research.
+# Columns: Club, Website, Registration/Linktree, Instagram, City, Auto-pull?
 vancouver_clubs = [
-    "Split Second Basketball", "Rain City", "Vancity", "Greenlight",
-    "Journey", "Squad International", "Drive", "Alamat Allstars",
-    "Prospect Basketball", "RBL Basketball", "Dime Hoops Basketball", "Empower Basketball",
+    ["Split Second Basketball", "https://www.splitsecondbasketball.com/",
+     "https://splitsecondbasketball.leagueapps.com/", "https://www.instagram.com/splitsecondbasketball/",
+     "Vancouver", "Y"],
+    ["Rain City", "https://www.raincitybasketball.ca/",
+     "https://www.raincitybasketball.ca/register", "https://www.instagram.com/raincitybasketball/",
+     "Vancouver", "Y"],
+    ["Vancity", "https://vancitybasketball.com/",
+     "https://vancitybasketball.teamsportsadmin.com/events", "https://www.instagram.com/vancitybasketballacademy/",
+     "North Vancouver", "Y"],
+    ["Greenlight", "https://www.greenlightbasketball.ca/",
+     "", "https://www.instagram.com/greenlightbball/",
+     "Vancouver", "Y"],
+    ["Journey", "https://www.journeybasketball.ca/",
+     "https://www.journeybasketball.ca/development-programs", "https://www.instagram.com/journey_basketball/",
+     "Vancouver", "Y"],
+    ["Squad International", "https://www.squadbasketball.net/",
+     "https://squadbasketball.hoopstir.com/", "https://www.instagram.com/international_squad/",
+     "Vancouver", "Y"],
+    ["Drive", "https://drivebasketball.com/",
+     "https://drivebasketball.com/camps/", "",
+     "Surrey / Vancouver", "Y"],
+    ["Alamat Allstars", "", "", "",
+     "Vancouver", "N"],  # no public online presence found
+    ["Prospect Basketball", "",
+     "https://www.facebook.com/Prospectsbasketballacademy/", "https://www.instagram.com/prospectsbasketballbc/",
+     "Vancouver", "N"],  # IG/FB only, no website to auto-pull
+    ["RBL Basketball", "https://rblbasketball.com/",
+     "https://rblbasketball.com/skill-development/", "https://www.instagram.com/rblbasketball/",
+     "Vancouver", "Y"],
+    ["Dime Hoops Basketball", "https://dimehoops.ca/",
+     "https://www.dimehoops.ca/registration", "https://www.instagram.com/dimehoopsbc/",
+     "Richmond", "Y"],
+    ["Empower Basketball", "https://www.empowerbasketball.ca/",
+     "https://www.empowerbasketball.ca/programs-and-locations", "https://www.instagram.com/empowerbclub/",
+     "Richmond", "Y"],
 ]
-for i, club in enumerate(vancouver_clubs):
+for i, values in enumerate(vancouver_clubs):
     row = src_header + 1 + i
     band = i % 2 == 1
-    values = [club, "", "", "", "Vancouver", "Y"]
     for idx, val in enumerate(values, start=1):
         c = ws_src.cell(row=row, column=idx, value=val)
         c.font = BODY_FONT
@@ -275,7 +357,7 @@ for i, club in enumerate(vancouver_clubs):
         c.border = BORDER
         if band:
             c.fill = BAND_FILL
-        if idx in (2, 3, 4) and not val:  # URL cells to fill in
+        if idx in (2, 3, 4) and not val:  # missing URL cells to fill in
             c.fill = INPUT_FILL
 ws_src.freeze_panes = ws_src.cell(row=src_header + 1, column=1)
 
